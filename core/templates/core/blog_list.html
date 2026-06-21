@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blog — SelvaRohith</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0a0a0f;--surface:#111118;--surface-2:#1a1a24;--border:rgba(255,255,255,.07);--border-hover:rgba(255,255,255,.14);--text:#f0efe9;--muted:#6b6b80;--accent:#7f77dd;--accent-dim:#26215C;--accent-bright:#AFA9EC;--green:#1D9E75;--green-dim:#04342C;--green-bright:#5DCAA5;}
+    body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;min-height:100vh;}
+    nav{position:sticky;top:0;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;border-bottom:.5px solid var(--border);background:rgba(10,10,15,.9);backdrop-filter:blur(12px);z-index:10;}
+    .nav-logo{font-size:13px;font-weight:500;letter-spacing:.14em;color:var(--accent);text-decoration:none;}
+    .nav-back{font-size:13px;color:var(--muted);text-decoration:none;}
+    .nav-back:hover{color:var(--text);}
+    .page{max-width:760px;margin:0 auto;padding:4rem 2rem;}
+    .page-header{margin-bottom:3rem;}
+    .page-label{font-size:11px;letter-spacing:.14em;color:var(--accent);text-transform:uppercase;margin-bottom:1rem;}
+    .page-header h1{font-size:36px;font-weight:500;}
+    .blog-grid{display:grid;gap:14px;}
+    .blog-card{background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:1.75rem;text-decoration:none;color:inherit;display:block;transition:border-color .2s,transform .2s;}
+    .blog-card:hover{border-color:var(--border-hover);transform:translateY(-3px);}
+    .blog-meta{display:flex;gap:12px;align-items:center;margin-bottom:1rem;}
+    .blog-date{font-size:11px;color:var(--muted);}
+    .blog-read{font-size:11px;color:var(--accent);background:var(--accent-dim);padding:2px 8px;border-radius:999px;}
+    .blog-views{font-size:11px;color:var(--muted);}
+    .blog-card h2{font-size:18px;font-weight:500;margin-bottom:8px;line-height:1.4;}
+    .blog-card p{font-size:14px;color:var(--muted);line-height:1.75;}
+    .blog-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:1rem;}
+    .blog-tag{font-size:11px;color:var(--muted);background:var(--surface-2);padding:3px 9px;border-radius:999px;}
+    .empty{color:var(--muted);font-size:15px;padding:3rem 0;}
+    .empty a{color:var(--accent);}
+  </style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo">SR</a>
+  <a href="/" class="nav-back">← Back to portfolio</a>
+</nav>
+<div class="page">
+  <div class="page-header">
+    <div class="page-label">Writing</div>
+    <h1>Blog</h1>
+  </div>
+  {% if posts %}
+  <div class="blog-grid">
+    {% for post in posts %}
+    <a href="{% url 'blog_detail' post.slug %}" class="blog-card">
+      <div class="blog-meta">
+        <span class="blog-date">{{ post.created_at|date:"M d, Y" }}</span>
+        <span class="blog-read">{{ post.read_time }}</span>
+        <span class="blog-views">{{ post.view_count }} views</span>
+      </div>
+      <h2>{{ post.title }}</h2>
+      <p>{{ post.excerpt }}</p>
+      {% if post.tag_list %}
+      <div class="blog-tags">{% for tag in post.tag_list %}<span class="blog-tag">{{ tag }}</span>{% endfor %}</div>
+      {% endif %}
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">No posts yet. Add your first one via <a href="/admin/">Django Admin</a>.</p>
+  {% endif %}
+</div>
+</body>
+</html>

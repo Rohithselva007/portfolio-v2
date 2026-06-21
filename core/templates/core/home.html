@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SelvaRohith — Digital Architect</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#0a0a0f; --surface:#111118; --surface-2:#1a1a24;
+      --border:rgba(255,255,255,0.07); --border-hover:rgba(255,255,255,0.14);
+      --text:#f0efe9; --muted:#6b6b80;
+      --accent:#7f77dd; --accent-dim:#26215C; --accent-bright:#AFA9EC;
+      --green:#1D9E75; --green-dim:#04342C; --green-bright:#5DCAA5;
+      --amber:#EF9F27; --amber-dim:#412402;
+    }
+    html { scroll-behavior: smooth; }
+    body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; overflow-x:hidden; cursor:none; }
+    #cursor { width:10px;height:10px;background:var(--accent);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s; }
+    #cursor-ring { width:36px;height:36px;border:1px solid rgba(127,119,221,.5);border-radius:50%;position:fixed;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .2s,height .2s; }
+    body:has(a:hover) #cursor, body:has(button:hover) #cursor { width:16px;height:16px;background:var(--accent-bright); }
+    body:has(a:hover) #cursor-ring, body:has(button:hover) #cursor-ring { width:52px;height:52px; }
+    #bg-canvas { position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:.35; }
+    .wrap { position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 2rem; }
+    nav { position:fixed;top:0;left:0;right:0;z-index:100;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;border-bottom:.5px solid var(--border);background:rgba(10,10,15,.85);backdrop-filter:blur(12px); }
+    .nav-logo { font-size:13px;font-weight:500;letter-spacing:.14em;color:var(--accent);text-transform:uppercase; }
+    .nav-links { display:flex;gap:2rem; }
+    .nav-links a { font-size:13px;color:var(--muted);text-decoration:none;transition:color .2s; }
+    .nav-links a:hover { color:var(--text); }
+    .hero { min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:7rem 0 4rem;position:relative; }
+    .hero-eyebrow { display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.1em;color:var(--green-bright);background:var(--green-dim);padding:5px 14px;border-radius:999px;margin-bottom:2rem;width:fit-content; }
+    .hero-eyebrow::before { content:'';width:6px;height:6px;background:var(--green-bright);border-radius:50%;animation:pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+    .hero h1 { font-size:clamp(2.8rem,7vw,5rem);font-weight:500;line-height:1.1;margin-bottom:.5rem;letter-spacing:-.02em; }
+    .glitch { display:inline-block;color:var(--accent-bright);position:relative; }
+    .glitch::before,.glitch::after { content:attr(data-text);position:absolute;top:0;left:0;opacity:0; }
+    .glitch::before { color:#ff6b9d;animation:glitch1 4s infinite; }
+    .glitch::after  { color:var(--green-bright);animation:glitch2 4s infinite; }
+    @keyframes glitch1 { 0%,94%,100%{opacity:0;clip-path:none;transform:none} 95%{opacity:.7;clip-path:inset(20% 0 60% 0);transform:translate(-3px,0)} 96%{clip-path:inset(60% 0 10% 0);transform:translate(3px,0)} 97%{clip-path:inset(40% 0 40% 0);transform:translate(-2px,0)} 98%{opacity:0} }
+    @keyframes glitch2 { 0%,95%,100%{opacity:0;clip-path:none;transform:none} 96%{opacity:.5;clip-path:inset(50% 0 30% 0);transform:translate(3px,0)} 97%{clip-path:inset(10% 0 70% 0);transform:translate(-3px,0)} 98%{opacity:0} }
+    .hero-sub { font-size:16px;color:var(--muted);line-height:1.75;max-width:520px;margin:1.5rem 0 2.5rem; }
+    .hero-sub em { color:var(--accent-bright);font-style:normal; }
+    .hero-btns { display:flex;gap:12px;flex-wrap:wrap;margin-bottom:3rem; }
+    .btn-primary { padding:12px 28px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-family:inherit;cursor:none;transition:background .2s,transform .15s; }
+    .btn-primary:hover { background:#6a62c4;transform:translateY(-1px); }
+    .btn-ghost { padding:12px 28px;background:transparent;color:var(--text);border:.5px solid var(--border-hover);border-radius:8px;font-size:14px;font-family:inherit;cursor:none;transition:border-color .2s,transform .15s; }
+    .btn-ghost:hover { border-color:var(--accent);color:var(--accent-bright);transform:translateY(-1px); }
+    .stack-chips { display:flex;gap:8px;flex-wrap:wrap; }
+    .chip { font-size:12px;padding:5px 12px;border:.5px solid var(--border);border-radius:999px;color:var(--muted);background:var(--surface);letter-spacing:.03em; }
+    .scroll-hint { position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted);font-size:11px;letter-spacing:.1em;animation:fadeFloat 3s infinite; }
+    .scroll-hint::after { content:'';width:1px;height:40px;background:linear-gradient(to bottom,var(--muted),transparent); }
+    @keyframes fadeFloat { 0%,100%{opacity:.5;transform:translateX(-50%) translateY(0)} 50%{opacity:1;transform:translateX(-50%) translateY(-6px)} }
+    section { padding:6rem 0;border-top:.5px solid var(--border);opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease; }
+    section.visible { opacity:1;transform:translateY(0); }
+    .section-label { font-size:11px;letter-spacing:.14em;color:var(--accent);text-transform:uppercase;margin-bottom:3rem;display:flex;align-items:center;gap:12px; }
+    .section-label::after { content:'';flex:1;height:.5px;background:var(--border);max-width:200px; }
+    .about-grid { display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start; }
+    .about-text h2 { font-size:28px;font-weight:500;line-height:1.3;margin-bottom:1rem; }
+    .about-text p { font-size:15px;color:var(--muted);line-height:1.8;margin-bottom:1rem; }
+    .about-text p em { color:var(--text);font-style:normal; }
+    .about-stats { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+    .stat-card { background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:1.25rem; }
+    .stat-num { font-size:28px;font-weight:500;color:var(--accent-bright); }
+    .stat-label { font-size:12px;color:var(--muted);margin-top:4px; }
+    .edu-card { background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:1.25rem;margin-top:10px;display:flex;align-items:flex-start;gap:12px; }
+    .edu-icon { width:36px;height:36px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0; }
+    .edu-card h4 { font-size:14px;font-weight:500;margin-bottom:3px; }
+    .edu-card p { font-size:12px;color:var(--muted); }
+    .edu-card span { font-size:11px;color:var(--accent);margin-top:4px;display:block; }
+    .projects-grid { display:grid;grid-template-columns:1fr 1fr;gap:14px; }
+    .proj-card { background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:1.5rem;transition:border-color .2s,transform .2s;position:relative;overflow:hidden; }
+    .proj-card::before { content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .3s; }
+    .proj-card:hover { border-color:var(--border-hover);transform:translateY(-3px); }
+    .proj-card:hover::before { opacity:1; }
+    .proj-card.featured { grid-column:span 2;display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:center; }
+    .proj-top { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem; }
+    .proj-icon { width:40px;height:40px;background:var(--accent-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px; }
+    .badge { font-size:11px;padding:3px 10px;border-radius:999px; }
+    .badge-live { background:var(--green-dim);color:var(--green-bright); }
+    .badge-wip  { background:var(--amber-dim);color:var(--amber); }
+    .badge-fresh { background:var(--accent-dim);color:var(--accent-bright); }
+    .proj-card h3 { font-size:16px;font-weight:500;margin-bottom:8px; }
+    .proj-card p { font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:1.25rem; }
+    .proj-chips { display:flex;gap:6px;flex-wrap:wrap; }
+    .proj-chip { font-size:11px;color:var(--muted);background:var(--surface-2);padding:3px 9px;border-radius:999px;border:.5px solid var(--border); }
+    .proj-footer { display:flex;align-items:center;justify-content:space-between;margin-top:1.25rem; }
+    .proj-links { display:flex;gap:12px; }
+    .proj-link { display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--accent-bright);text-decoration:none;transition:gap .2s; }
+    .proj-link:hover { gap:8px; }
+    .view-count { font-size:11px;color:var(--muted); }
+    .proj-visual { background:var(--surface-2);border:.5px solid var(--border);border-radius:10px;height:140px;display:flex;align-items:center;justify-content:center;font-size:48px;letter-spacing:-.05em;color:var(--accent);font-weight:500; }
+    /* Blog */
+    .blog-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px; }
+    .blog-card { background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:1.5rem;text-decoration:none;color:inherit;display:block;transition:border-color .2s,transform .2s; }
+    .blog-card:hover { border-color:var(--border-hover);transform:translateY(-3px); }
+    .blog-meta { display:flex;gap:10px;align-items:center;margin-bottom:1rem; }
+    .blog-date { font-size:11px;color:var(--muted); }
+    .blog-read { font-size:11px;color:var(--accent); }
+    .blog-card h3 { font-size:15px;font-weight:500;margin-bottom:8px;line-height:1.4; }
+    .blog-card p { font-size:13px;color:var(--muted);line-height:1.7; }
+    .blog-tags { display:flex;gap:6px;flex-wrap:wrap;margin-top:1rem; }
+    .blog-tag { font-size:11px;color:var(--muted);background:var(--surface-2);padding:2px 8px;border-radius:999px; }
+    /* Skills */
+    .skills-layout { display:grid;grid-template-columns:1fr 1fr;gap:3rem; }
+    .skill-group h3 { font-size:13px;color:var(--muted);letter-spacing:.08em;margin-bottom:1.25rem;text-transform:uppercase; }
+    .skill-item { margin-bottom:1.25rem; }
+    .skill-header { display:flex;justify-content:space-between;margin-bottom:6px; }
+    .skill-name { font-size:14px; }
+    .skill-pct { font-size:13px;color:var(--accent-bright); }
+    .skill-track { height:3px;background:var(--surface-2);border-radius:999px;overflow:hidden; }
+    .skill-fill { height:3px;background:var(--accent);border-radius:999px;width:0;transition:width 1.2s cubic-bezier(.4,0,.2,1); }
+    .skill-fill.green { background:var(--green); }
+    /* Timeline */
+    .timeline { position:relative;padding-left:1.5rem; }
+    .timeline::before { content:'';position:absolute;left:0;top:8px;bottom:8px;width:.5px;background:var(--border); }
+    .tl-item { position:relative;padding-bottom:2.5rem; }
+    .tl-item:last-child { padding-bottom:0; }
+    .tl-dot { position:absolute;left:-1.65rem;top:6px;width:8px;height:8px;border-radius:50%;background:var(--accent);border:2px solid var(--bg); }
+    .tl-dot.dim { background:var(--surface-2);border-color:var(--border); }
+    .tl-date { font-size:11px;color:var(--accent);letter-spacing:.08em;margin-bottom:6px; }
+    .tl-item h3 { font-size:16px;font-weight:500;margin-bottom:4px; }
+    .tl-item h4 { font-size:13px;color:var(--muted);margin-bottom:8px; }
+    .tl-item p { font-size:14px;color:var(--muted);line-height:1.7; }
+    .tl-tags { display:flex;gap:6px;flex-wrap:wrap;margin-top:10px; }
+    .tl-tag { font-size:11px;color:var(--muted);background:var(--surface);padding:3px 9px;border-radius:999px;border:.5px solid var(--border); }
+    /* Contact */
+    .contact-wrap { max-width:600px; }
+    .contact-wrap h2 { font-size:32px;font-weight:500;line-height:1.3;margin-bottom:1rem; }
+    .contact-wrap > p { font-size:15px;color:var(--muted);line-height:1.8;margin-bottom:2rem; }
+    .contact-form { display:flex;flex-direction:column;gap:14px;margin-bottom:2rem; }
+    .form-row { display:grid;grid-template-columns:1fr 1fr;gap:14px; }
+    .form-group { display:flex;flex-direction:column;gap:6px; }
+    .form-group label { font-size:12px;color:var(--muted);letter-spacing:.04em; }
+    .form-group input, .form-group textarea {
+      background:var(--surface);border:.5px solid var(--border);border-radius:8px;
+      color:var(--text);font-family:inherit;font-size:14px;padding:10px 14px;
+      outline:none;transition:border-color .2s;resize:none;
+    }
+    .form-group input:focus, .form-group textarea:focus { border-color:var(--accent); }
+    .form-msg { font-size:13px;margin-top:4px;min-height:20px; }
+    .form-msg.success { color:var(--green-bright); }
+    .form-msg.error { color:#f87171; }
+    .contact-links { display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.5rem; }
+    .contact-card { background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:1rem 1.25rem;display:flex;align-items:center;gap:12px;text-decoration:none;transition:border-color .2s,transform .15s; }
+    .contact-card:hover { border-color:var(--accent);transform:translateY(-2px); }
+    .contact-icon { font-size:18px;width:32px;text-align:center; }
+    .contact-card-label { font-size:11px;color:var(--muted);margin-bottom:2px; }
+    .contact-card-val { font-size:13px;color:var(--text); }
+    .avail-banner { background:var(--surface);border:.5px solid var(--green-dim);border-radius:12px;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:1rem; }
+    .avail-dot { width:10px;height:10px;background:var(--green-bright);border-radius:50%;flex-shrink:0;animation:pulse 2s infinite; }
+    .avail-banner p { font-size:14px;color:var(--muted);margin:0; }
+    .avail-banner p strong { color:var(--green-bright);font-weight:500; }
+    footer { border-top:.5px solid var(--border);padding:2rem 0;display:flex;justify-content:space-between;align-items:center; }
+    footer p { font-size:12px;color:var(--muted); }
+    .footer-links { display:flex;gap:1.5rem; }
+    .footer-links a { font-size:12px;color:var(--muted);text-decoration:none; }
+    .footer-links a:hover { color:var(--text); }
+    @media(max-width:640px){
+      .about-grid,.projects-grid,.skills-layout,.contact-links,.form-row{grid-template-columns:1fr}
+      .proj-card.featured{grid-column:span 1;grid-template-columns:1fr}
+      .proj-visual{display:none}
+      nav{padding:1rem}
+      .nav-links{gap:1rem}
+      footer{flex-direction:column;gap:1rem;text-align:center}
+    }
+  </style>
+</head>
+<body>
+{% load static %}
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<canvas id="bg-canvas"></canvas>
+
+<nav>
+  <span class="nav-logo">SR</span>
+  <div class="nav-links">
+    <a href="#about">About</a>
+    <a href="#projects">Work</a>
+    <a href="#skills">Skills</a>
+    <a href="#blog">Blog</a>
+    <a href="#contact">Contact</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-eyebrow">Open to opportunities</div>
+    <h1>SelvaRohith<br><span class="glitch" data-text="Digital Architect">Digital Architect</span></h1>
+    <p class="hero-sub">Fresh graduate from Tamil Nadu — building <em>fast, visual, and purposeful</em> web experiences with Django, HTMX, and GSAP. I care about the craft, not just the code.</p>
+    <div class="hero-btns">
+      <a href="#projects"><button class="btn-primary">View my work ↓</button></a>
+      <a href="#contact"><button class="btn-ghost">Get in touch</button></a>
+    </div>
+    <div class="stack-chips">
+      <span class="chip">Django 5</span><span class="chip">HTMX</span>
+      <span class="chip">Tailwind CSS</span><span class="chip">GSAP</span>
+      <span class="chip">PostgreSQL</span><span class="chip">Vanilla JS</span><span class="chip">Python</span>
+    </div>
+    <div class="scroll-hint">scroll</div>
+  </div>
+
+  <!-- About -->
+  <section id="about">
+    <div class="section-label">About me</div>
+    <div class="about-grid">
+      <div class="about-text">
+        <h2>A fresher who builds<br>like a professional.</h2>
+        <p>I completed my <em>Bachelor of Engineering</em> in 2024 from Tamil Nadu. While most freshers are still reading tutorials, I've been shipping full-stack projects — from AI-powered games to animated portfolios.</p>
+        <p>My approach: <em>learn by building real things</em>. Every project on this page is something I designed, built, debugged, and deployed myself. No team. No shortcuts.</p>
+        <p>I gravitate toward the intersection of <em>backend reliability</em> and <em>frontend craft</em> — the place where Django's power meets GSAP's elegance.</p>
+      </div>
+      <div>
+        <div class="about-stats">
+          <div class="stat-card"><div class="stat-num">2024</div><div class="stat-label">B.E. Graduate</div></div>
+          <div class="stat-card"><div class="stat-num">5+</div><div class="stat-label">Projects shipped</div></div>
+          <div class="stat-card"><div class="stat-num">1yr</div><div class="stat-label">Building with Django</div></div>
+          <div class="stat-card"><div class="stat-num">∞</div><div class="stat-label">Things left to build</div></div>
+        </div>
+        <div class="edu-card">
+          <div class="edu-icon">🎓</div>
+          <div>
+            <h4>Bachelor of Engineering</h4>
+            <p>Computer Science & Engineering</p>
+            <p>Tamil Nadu, India</p>
+            <span>Graduated 2024</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Projects -->
+  <section id="projects">
+    <div class="section-label">Selected work</div>
+    <div class="projects-grid">
+      {% for project in projects %}
+        {% if project.featured %}
+        <div class="proj-card featured" data-slug="{{ project.slug }}">
+          <div>
+            <div class="proj-top">
+              <div class="proj-icon">{{ project.emoji }}</div>
+              <span class="badge {{ project.get_badge_class }}">{{ project.get_badge_label }}</span>
+            </div>
+            <h3>{{ project.title }}</h3>
+            <p>{{ project.description }}</p>
+            <div class="proj-chips">
+              {% for tag in project.tag_list %}<span class="proj-chip">{{ tag }}</span>{% endfor %}
+            </div>
+            <div class="proj-footer">
+              <div class="proj-links">
+                {% if project.live_url %}<a href="{{ project.live_url }}" class="proj-link" target="_blank">View live →</a>{% endif %}
+                {% if project.github_url %}<a href="{{ project.github_url }}" class="proj-link" target="_blank">GitHub →</a>{% endif %}
+              </div>
+              <span class="view-count" id="views-{{ project.slug }}">{{ project.view_count }} views</span>
+            </div>
+          </div>
+          <div class="proj-visual">{{ project.emoji }}</div>
+        </div>
+        {% else %}
+        <div class="proj-card" data-slug="{{ project.slug }}">
+          <div class="proj-top">
+            <div class="proj-icon">{{ project.emoji }}</div>
+            <span class="badge {{ project.get_badge_class }}">{{ project.get_badge_label }}</span>
+          </div>
+          <h3>{{ project.title }}</h3>
+          <p>{{ project.description }}</p>
+          <div class="proj-chips">
+            {% for tag in project.tag_list %}<span class="proj-chip">{{ tag }}</span>{% endfor %}
+          </div>
+          <div class="proj-footer">
+            <div class="proj-links">
+              {% if project.live_url %}<a href="{{ project.live_url }}" class="proj-link" target="_blank">View live →</a>{% endif %}
+              {% if project.github_url %}<a href="{{ project.github_url }}" class="proj-link" target="_blank">GitHub →</a>{% endif %}
+            </div>
+            <span class="view-count" id="views-{{ project.slug }}">{{ project.view_count }} views</span>
+          </div>
+        </div>
+        {% endif %}
+      {% empty %}
+        <p style="color:var(--muted);grid-column:span 2">No projects yet — add them via <a href="/admin/" style="color:var(--accent)">Django Admin</a>.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Skills -->
+  <section id="skills">
+    <div class="section-label">Skills & tools</div>
+    <div class="skills-layout">
+      <div class="skill-group">
+        <h3>Backend</h3>
+        <div class="skill-item"><div class="skill-header"><span class="skill-name">Python</span><span class="skill-pct">85%</span></div><div class="skill-track"><div class="skill-fill" data-w="85"></div></div></div>
+        <div class="skill-item"><div class="skill-header"><span class="skill-name">Django 5</span><span class="skill-pct">80%</span></div><div class="skill-track"><div class="skill-fill" data-w="80"></div></div></div>
+        <div class="skill-item"><div class="skill-header"><span class="skill-name">Django REST / APIs</span><span class="skill-pct">65%</span></div><div class="skill-track"><div class="skill-fill" data-w="65"></div></div></div>
+        <div class="skill-item"><div class="skill-header"><span class="skill-name">PostgreSQL / SQLite</span><span class="skill-pct">62%</span></div><div class="skill-track"><div class="skill-fill" data-w="62"></div></div></div>
+      </div>
+      <div class="skill-group">
+        <h3>Frontend</h3>
+        <div class="skill-item"><div class="skill-header"><span class="skill-name">Tailwind CSS</span><span class="skill-pct">82%</span></div><div class="skill-track"><div class="skill-fill green" data-w="82"></div></div></div>
+        <div class="skill-item"><div class="skill-header"><span class="skill-name">HTMX</span><span class="skill-pct">74%</span></div><div class="skill-track"><div class="skill-fill green" data-w="74"></div></div></div>
+        <div class="skill-item"><div class="skill-header"><span class="skill-name">GSAP</span><span class="skill-pct">70%</span></div><div class="skill-track"><div class="skill-fill green" data-w="70"></div></div></div>
+        <div class="skill-item"><div class="skill-header"><span class="skill-name">Vanilla JS</span><span class="skill-pct">78%</span></div><div class="skill-track"><div class="skill-fill green" data-w="78"></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Journey -->
+  <section id="journey">
+    <div class="section-label">Journey</div>
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-date">2026 — NOW</div><h3>Actively building & job hunting</h3><h4>Self-directed full-stack development</h4><p>Shipping real projects — Django apps, HTMX UIs, animated frontends. Deploying on Render, building portfolio, ready for first professional role.</p><div class="tl-tags"><span class="tl-tag">Open to work</span><span class="tl-tag">Django</span><span class="tl-tag">GSAP</span><span class="tl-tag">HTMX</span></div></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-date">2025</div><h3>Went deep on frontend craft</h3><h4>Self-taught frontend skills</h4><p>Mastered Tailwind CSS, Bootstrap grid, Flexbox, GSAP animations, glassmorphism design, and the Canvas API.</p><div class="tl-tags"><span class="tl-tag">Tailwind</span><span class="tl-tag">Bootstrap</span><span class="tl-tag">GSAP</span><span class="tl-tag">Canvas</span></div></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-date">2024</div><h3>Graduated & started Django</h3><h4>B.E. Computer Science, Tamil Nadu</h4><p>Completed Bachelor's degree and immediately started learning Django — models, CBVs, admin, PostgreSQL. No waiting around.</p><div class="tl-tags"><span class="tl-tag">B.E. Graduate</span><span class="tl-tag">Django</span><span class="tl-tag">Python</span></div></div>
+      <div class="tl-item"><div class="tl-dot dim"></div><div class="tl-date">2020 – 2024</div><h3>Bachelor of Engineering</h3><h4>Computer Science — Tamil Nadu</h4><p>Four years of CS fundamentals — algorithms, data structures, networking. Developed passion for web development.</p><div class="tl-tags"><span class="tl-tag">Computer Science</span><span class="tl-tag">Python basics</span><span class="tl-tag">Web fundamentals</span></div></div>
+    </div>
+  </section>
+
+  <!-- Blog -->
+  <section id="blog">
+    <div class="section-label">Blog</div>
+    {% if posts %}
+    <div class="blog-grid">
+      {% for post in posts %}
+      <a href="{% url 'blog_detail' post.slug %}" class="blog-card">
+        <div class="blog-meta">
+          <span class="blog-date">{{ post.created_at|date:"M d, Y" }}</span>
+          <span class="blog-read">{{ post.read_time }}</span>
+        </div>
+        <h3>{{ post.title }}</h3>
+        <p>{{ post.excerpt }}</p>
+        {% if post.tag_list %}
+        <div class="blog-tags">{% for tag in post.tag_list %}<span class="blog-tag">{{ tag }}</span>{% endfor %}</div>
+        {% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    <div style="margin-top:1.5rem">
+      <a href="{% url 'blog_list' %}" class="proj-link">View all posts →</a>
+    </div>
+    {% else %}
+    <p style="color:var(--muted)">No posts yet — write your first one via <a href="/admin/" style="color:var(--accent)">Django Admin</a>.</p>
+    {% endif %}
+  </section>
+
+  <!-- Contact -->
+  <section id="contact">
+    <div class="section-label">Get in touch</div>
+    <div class="contact-wrap">
+      <h2>Let's build something together.</h2>
+      <p>I'm a 2024 fresher actively looking for my first role as a Django developer or full-stack engineer. If you're hiring or have a project in mind — I'd love to hear from you.</p>
+
+      <form class="contact-form" id="contact-form">
+        {% csrf_token %}
+        <div class="form-row">
+          <div class="form-group"><label>Name</label><input type="text" name="name" placeholder="Your name" required /></div>
+          <div class="form-group"><label>Email</label><input type="email" name="email" placeholder="your@email.com" required /></div>
+        </div>
+        <div class="form-group"><label>Subject</label><input type="text" name="subject" placeholder="What's this about?" required /></div>
+        <div class="form-group"><label>Message</label><textarea name="message" rows="5" placeholder="Tell me about your project or opportunity..." required></textarea></div>
+        <button type="submit" class="btn-primary" style="width:fit-content">Send message →</button>
+        <div class="form-msg" id="form-msg"></div>
+      </form>
+
+      <div class="contact-links">
+        <a href="mailto:rohithselva1@gmail.com" class="contact-card"><span class="contact-icon">✉</span><div><div class="contact-card-label">Email</div><div class="contact-card-val">rohithselva1@gmail.com</div></div></a>
+        <a href="https://github.com/Rohithselva007" target="_blank" class="contact-card"><span class="contact-icon">⌥</span><div><div class="contact-card-label">GitHub</div><div class="contact-card-val">Rohithselva007</div></div></a>
+        <a href="#" class="contact-card"><span class="contact-icon">in</span><div><div class="contact-card-label">LinkedIn</div><div class="contact-card-val">SelvaRohith</div></div></a>
+        <a href="#" class="contact-card"><span class="contact-icon">📍</span><div><div class="contact-card-label">Location</div><div class="contact-card-val">Gummidipundi, Tamil Nadu</div></div></a>
+      </div>
+      <div class="avail-banner"><div class="avail-dot"></div><p><strong>Available for full-time roles & freelance projects.</strong> Open to remote work and relocation within India.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Designed & built by SelvaRohith — 2026</p>
+    <div class="footer-links">
+      <a href="https://github.com/Rohithselva007">GitHub</a>
+      <a href="#">LinkedIn</a>
+      <a href="mailto:rohithselva1@gmail.com">Email</a>
+    </div>
+  </footer>
+</div>
+
+<script>
+  // Cursor
+  const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
+  (function animRing(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing);})();
+
+  // Canvas
+  const canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d');
+  let W,H,dots=[];
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+  resize();window.addEventListener('resize',resize);
+  for(let i=0;i<80;i++)dots.push({x:Math.random()*1920,y:Math.random()*1080,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5});
+  function drawCanvas(){
+    ctx.clearRect(0,0,W,H);
+    dots.forEach(d=>{d.x+=d.vx;d.y+=d.vy;if(d.x<0)d.x=W;if(d.x>W)d.x=0;if(d.y<0)d.y=H;if(d.y>H)d.y=0;ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,Math.PI*2);ctx.fillStyle='rgba(127,119,221,.6)';ctx.fill();});
+    dots.forEach((a,i)=>dots.slice(i+1).forEach(b=>{const dist=Math.hypot(a.x-b.x,a.y-b.y);if(dist<120){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(127,119,221,${.15*(1-dist/120)})`;ctx.lineWidth=.5;ctx.stroke();}}));
+    requestAnimationFrame(drawCanvas);
+  }
+  drawCanvas();
+
+  // Scroll reveal
+  const obs=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');}),{threshold:.1});
+  document.querySelectorAll('section').forEach(s=>obs.observe(s));
+
+  // Skill bars
+  const skillObs=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.querySelectorAll('.skill-fill').forEach(b=>b.style.width=b.dataset.w+'%');}),{threshold:.2});
+  document.querySelectorAll('#skills').forEach(s=>skillObs.observe(s));
+
+  // Project view tracking
+  document.querySelectorAll('.proj-card[data-slug]').forEach(card=>{
+    card.addEventListener('click',()=>{
+      const slug=card.dataset.slug;
+      fetch(`/api/project/${slug}/view/`,{method:'POST',headers:{'X-CSRFToken':getCookie('csrftoken')}})
+        .then(r=>r.json()).then(d=>{
+          const el=document.getElementById('views-'+slug);
+          if(el)el.textContent=d.views+' views';
+        }).catch(()=>{});
+    });
+  });
+
+  // Contact form
+  document.getElementById('contact-form').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const form=e.target, btn=form.querySelector('button[type=submit]'), msg=document.getElementById('form-msg');
+    btn.textContent='Sending...'; btn.disabled=true;
+    const data=new FormData(form);
+    try {
+      const res=await fetch('/contact/',{method:'POST',body:data,headers:{'X-CSRFToken':getCookie('csrftoken')}});
+      const json=await res.json();
+      if(json.ok){ msg.textContent="Message sent! I'll get back to you soon."; msg.className='form-msg success'; form.reset(); }
+      else { msg.textContent=json.errors.join(' '); msg.className='form-msg error'; }
+    } catch(err) { msg.textContent='Something went wrong. Please email me directly.'; msg.className='form-msg error'; }
+    btn.textContent='Send message →'; btn.disabled=false;
+  });
+
+  function getCookie(name){
+    const val=`; ${document.cookie}`;
+    const parts=val.split(`; ${name}=`);
+    if(parts.length===2)return parts.pop().split(';').shift();
+  }
+</script>
+</body>
+</html>

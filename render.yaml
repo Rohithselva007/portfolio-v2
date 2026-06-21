@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: selvarohith-portfolio
+    runtime: python
+    buildCommand: "chmod +x build.sh && ./build.sh"
+    startCommand: "gunicorn portfolio.wsgi"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: "admin"
+      - key: DJANGO_SUPERUSER_EMAIL
+        value: "rohithselva1@gmail.com"
+      - key: DJANGO_SUPERUSER_PASSWORD
+        generateValue: true
+      - key: CONTACT_EMAIL
+        value: "rohithselva1@gmail.com"
